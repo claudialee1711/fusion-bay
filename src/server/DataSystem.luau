@@ -32,6 +32,9 @@ function DataSystem.default()
 		Owned = {}, -- {DefId, Mutation, Fused}
 		Items = { boots = false, lucky = false },
 		Steals = 0,
+		Bought = 0, -- brainrot yang DIBELI di conveyor (starter gratis tidak dihitung)
+		SurvivedWave = false, -- pernah selamat dari tsunami
+		MissionsClaimed = {}, -- id misi yang hadiahnya sudah diklaim (1, 2, 3)
 	}
 end
 
@@ -77,6 +80,9 @@ function DataSystem.save(player)
 		Owned = data.Owned,
 		Items = data.Items,
 		Steals = data.Steals,
+		Bought = data.Bought or 0,
+		SurvivedWave = data.SurvivedWave or false,
+		MissionsClaimed = data.MissionsClaimed or {},
 	}
 	pcall(function()
 		store:SetAsync(tostring(player.UserId), clean)

@@ -81,8 +81,9 @@ function MapBuilder.build()
 	-- terlihat jelas dari spawn tanpa harus jalan jauh.
 	-- v3.3: conveyor naik +1.0 (pusat y=1.1, atas y=1.6), warna terang
 	-- supaya terbaca sebagai pita di seberang pandangan dari spawn.
+	-- v3.5 (ala rank 1): pita UNGU dengan tepi CYAN terang.
 	newPart(ws, "Conveyor", Vector3.new(190, 1, 14), Vector3.new(0, 1.1, 30),
-		Color3.fromRGB(200, 200, 210), { Material = Enum.Material.SmoothPlastic })
+		Color3.fromRGB(120, 60, 200), { Material = Enum.Material.SmoothPlastic })
 	for x = -90, 90, 15 do
 		local arrow = newPart(ws, "ConveyorArrow", Vector3.new(4, 0.2, 6), Vector3.new(x, 1.7, 30),
 			Color3.fromRGB(255, 200, 60), { CanCollide = false })
@@ -92,10 +93,11 @@ function MapBuilder.build()
 	newPart(ws, "RailSouth", Vector3.new(190, 2, 1), Vector3.new(0, 2, 37.5), Color3.fromRGB(40, 40, 50))
 	-- v3.3: strip Neon kuning di atas rel — conveyor harus terbaca
 	-- sebagai pita terang di seluruh lebar pandangan dari spawn.
+	-- v3.5 (ala rank 1): strip jadi CYAN terang di atas pita ungu.
 	newPart(ws, "ConveyorEdgeNorth", Vector3.new(190, 0.3, 0.6), Vector3.new(0, 3.15, 22.5),
-		Color3.fromRGB(255, 215, 0), { CanCollide = false, Material = Enum.Material.Neon })
+		Color3.fromRGB(0, 220, 255), { CanCollide = false, Material = Enum.Material.Neon })
 	newPart(ws, "ConveyorEdgeSouth", Vector3.new(190, 0.3, 0.6), Vector3.new(0, 3.15, 37.5),
-		Color3.fromRGB(255, 215, 0), { CanCollide = false, Material = Enum.Material.Neon })
+		Color3.fromRGB(0, 220, 255), { CanCollide = false, Material = Enum.Material.Neon })
 
 	-- Spawn: menghadap UTARA (-Z, ke conveyor dan base).
 	-- Orientation Y=0 = utara. Y=180 = selatan, membelakangi game.

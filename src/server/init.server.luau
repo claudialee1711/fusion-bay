@@ -259,5 +259,5 @@ for _, rec in ipairs(State.Active) do
 		walking += 1
 	end
 end
-print("[FusionBay] BUILD v3.4 recorded rebuild: label rapi, altar rata, banner kecil, objektif di HUD, brainrot tes menapak, tanpa baseplate, tanah hijau atas y=1, spawn dipaksa menghadap utara (server+camera), conveyor z=30, model 2.0x, grounding 1.6x (kaki menapak), sign kecil di spawn, brainrot di conveyor=" .. walking)
+print("[FusionBay] BUILD v3.5 recorded rebuild: index, misi, conveyor ungu, pil uang tengah, +$ melayang, label rapi, altar rata, banner kecil, objektif di HUD, brainrot tes menapak, tanpa baseplate, tanah hijau atas y=1, spawn dipaksa menghadap utara (server+camera), conveyor z=30, model 2.0x, grounding 1.6x (kaki menapak), sign kecil di spawn, brainrot di conveyor=" .. walking)
 print("Fusion Bay server started.")

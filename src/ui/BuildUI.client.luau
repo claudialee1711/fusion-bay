@@ -4,6 +4,7 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ContextActionService = game:GetService("ContextActionService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -11,6 +12,7 @@ local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local events = remotes:WaitForChild("RemoteEvents")
 local functions = remotes:WaitForChild("RemoteFunctions")
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local BrainrotDefs = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("BrainrotDefs"))
 
 local updateUIEvent = events:WaitForChild("UpdateUIEvent")
 local notifyEvent = events:WaitForChild("NotifyEvent")
@@ -18,6 +20,7 @@ local waveEvent = events:WaitForChild("WaveEvent")
 local buyItemEvent = events:WaitForChild("BuyItemEvent")
 local rebirthEvent = events:WaitForChild("RebirthEvent")
 local fuseEvent = events:WaitForChild("FuseEvent")
+local missionEvent = events:WaitForChild("MissionEvent")
 local getLeaderboard = functions:WaitForChild("GetLeaderboard")
 
 -- ============ Pembangun widget ============
@@ -75,10 +78,15 @@ gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = false
 gui.Parent = playerGui
 
--- ============ HUD (kanan atas, jauh dari menu Roblox kiri atas) ============
+-- ============ Pil uang tengah atas (v3.5, ala rank 1) ============
+-- Dulu panel koin di kanan atas; sekarang pil navy tengah atas:
+-- angka cash hijau besar, di bawahnya 3 pil kecil (income / mult /
+-- rebirth), lalu baris status wave. Pil digeser 40px ke kanan dari
+-- tengah supaya tidak menumpuk bar objektif di kiri atas.
 local hud = Instance.new("Frame")
-hud.Size = UDim2.new(0, 300, 0, 130)
-hud.Position = UDim2.new(1, -316, 0, 16)
+hud.Size = UDim2.new(0, 320, 0, 88)
+hud.Position = UDim2.new(0.5, 40, 0, 12)
+hud.AnchorPoint = Vector2.new(0.5, 0)
 hud.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
 hud.BackgroundTransparency = 0.15
 hud.BorderSizePixel = 0
@@ -87,26 +95,62 @@ hudCorner.CornerRadius = UDim.new(0, 12)
 hudCorner.Parent = hud
 hud.Parent = gui
 
-local coinsLabel = makeLabel(hud, "Coin: 0", UDim2.new(1, -20, 0, 36), UDim2.new(0, 10, 0, 8), Color3.fromRGB(255, 215, 0))
+local coinsLabel = Instance.new("TextLabel")
+coinsLabel.Size = UDim2.new(1, 0, 0, 34)
+coinsLabel.Position = UDim2.new(0, 0, 0, 4)
+coinsLabel.BackgroundTransparency = 1
+coinsLabel.Text = "$0"
+coinsLabel.TextColor3 = Color3.fromRGB(120, 255, 140)
 coinsLabel.TextSize = 28
-local incomeLabel = makeLabel(hud, "Income: 0/s", UDim2.new(1, -20, 0, 28), UDim2.new(0, 10, 0, 46), Color3.fromRGB(120, 255, 140))
-local rebirthLabel = makeLabel(hud, "Rebirth: 0 (x1)", UDim2.new(1, -20, 0, 28), UDim2.new(0, 10, 0, 74))
-local waveLabel = makeLabel(hud, "Wave: --", UDim2.new(1, -20, 0, 28), UDim2.new(0, 10, 0, 100), Color3.fromRGB(120, 200, 255))
+coinsLabel.Font = Enum.Font.SourceSansBold
+coinsLabel.TextXAlignment = Enum.TextXAlignment.Center
+coinsLabel.Parent = hud
+
+local function makePill(text, pos, width, color)
+	local p = Instance.new("TextLabel")
+	p.Size = UDim2.new(0, width, 0, 20)
+	p.Position = pos
+	p.BackgroundColor3 = color
+	p.Text = text
+	p.TextColor3 = Color3.fromRGB(255, 255, 255)
+	p.TextSize = 15
+	p.Font = Enum.Font.SourceSansBold
+	p.TextXAlignment = Enum.TextXAlignment.Center
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, 10)
+	c.Parent = p
+	p.Parent = hud
+	return p
+end
+local incomeLabel = makePill("+$0/s", UDim2.new(0, 10, 0, 42), 120, Color3.fromRGB(40, 140, 70))
+local multLabel = makePill("x1", UDim2.new(0, 138, 0, 42), 56, Color3.fromRGB(200, 120, 0))
+local rebirthLabel = makePill("REBIRTH 0", UDim2.new(0, 202, 0, 42), 108, Color3.fromRGB(160, 40, 160))
+local waveLabel = Instance.new("TextLabel")
+waveLabel.Size = UDim2.new(1, 0, 0, 18)
+waveLabel.Position = UDim2.new(0, 0, 0, 66)
+waveLabel.BackgroundTransparency = 1
+waveLabel.Text = "Wave: --"
+waveLabel.TextColor3 = Color3.fromRGB(120, 200, 255)
+waveLabel.TextSize = 14
+waveLabel.Font = Enum.Font.SourceSansBold
+waveLabel.TextXAlignment = Enum.TextXAlignment.Center
+waveLabel.Parent = hud
 
 -- ============ Objektif permanen (v3.4, kiri atas, selalu terlihat) ============
 -- Alur game dalam satu baris — pemain baru langsung tahu yang harus
 -- dilakukan tanpa membuka panel BANTUAN. Di bawah bar ini tidak ada
 -- apa-apa lagi: banner wave dipindah ke y=56 supaya tidak menumpuk.
 local objective = Instance.new("TextLabel")
-objective.Size = UDim2.new(0, 940, 0, 30)
+objective.Size = UDim2.new(0, 360, 0, 44)
 objective.Position = UDim2.new(0, 12, 0, 12)
 objective.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
 objective.BackgroundTransparency = 0.3
-objective.Text = "1. Beli brainrot di conveyor  2. Kumpulkan $/detik  3. Fusion 2 sama -> naik rarity  4. Lari ke base saat tsunami"
+objective.Text = "1. Beli di conveyor  2. Kumpulkan $/detik\n3. Fusion 2 sama  4. Lari ke base saat tsunami"
 objective.TextColor3 = Color3.fromRGB(255, 255, 255)
-objective.TextSize = 16
+objective.TextSize = 13
 objective.Font = Enum.Font.SourceSansBold
 objective.TextXAlignment = Enum.TextXAlignment.Left
+objective.TextWrapped = true
 local objectiveCorner = Instance.new("UICorner")
 objectiveCorner.CornerRadius = UDim.new(0, 8)
 objectiveCorner.Parent = objective
@@ -119,6 +163,7 @@ local menuDefs = {
 	{ Id = "Fusion", Text = "FUSION", Color = Color3.fromRGB(180, 130, 0) },
 	{ Id = "Rebirth", Text = "REBIRTH", Color = Color3.fromRGB(120, 40, 160) },
 	{ Id = "Rank", Text = "RANK", Color = Color3.fromRGB(40, 140, 90) },
+	{ Id = "Index", Text = "INDEX", Color = Color3.fromRGB(40, 120, 220) },
 	{ Id = "Help", Text = "BANTUAN", Color = Color3.fromRGB(80, 80, 100) },
 }
 for i, def in ipairs(menuDefs) do
@@ -212,6 +257,26 @@ makeButton(rankFrame, "TUTUP", UDim2.new(0, 110, 0, 40), UDim2.new(1, -120, 1, -
 	rankFrame.Visible = false
 end)
 
+-- INDEX (v3.5, ala rank 1): grid 10 karakter, 2 baris x 5 kolom.
+-- Kartu milik pemain yang ada di base dapat tag hijau "ON BASE".
+local indexFrame = makeFrame(gui, UDim2.new(0, 580, 0, 420), UDim2.new(0.5, 0, 0.5, 0))
+frames.Index = indexFrame
+local indexTitle = makeLabel(indexFrame, "FUSION BAY INDEX — 0 / 10", UDim2.new(1, -20, 0, 36), UDim2.new(0, 10, 0, 8), Color3.fromRGB(120, 200, 255))
+indexTitle.TextSize = 26
+local indexGrid = Instance.new("Frame")
+indexGrid.Size = UDim2.new(1, -20, 1, -100)
+indexGrid.Position = UDim2.new(0, 10, 0, 52)
+indexGrid.BackgroundTransparency = 1
+indexGrid.Parent = indexFrame
+local indexLayout = Instance.new("UIGridLayout")
+indexLayout.CellSize = UDim2.new(0, 104, 0, 140)
+indexLayout.CellPadding = UDim2.new(0, 6, 0, 6)
+indexLayout.SortOrder = Enum.SortOrder.LayoutOrder
+indexLayout.Parent = indexGrid
+makeButton(indexFrame, "TUTUP [X]", UDim2.new(0, 140, 0, 40), UDim2.new(0.5, -70, 1, -50), Color3.fromRGB(120, 40, 40)).MouseButton1Click:Connect(function()
+	indexFrame.Visible = false
+end)
+
 -- BANTUAN / TUTORIAL
 local helpFrame = makeFrame(gui, UDim2.new(0, 480, 0, 380), UDim2.new(0.5, 0, 0.5, 0))
 frames.Help = helpFrame
@@ -229,6 +294,84 @@ makeButton(helpFrame, "MULAI MAIN", UDim2.new(0, 180, 0, 48), UDim2.new(0.5, -90
 	helpFrame.Visible = false
 end)
 
+-- Daftar DefId yang sedang dimiliki di base (diisi dari UpdateUIEvent).
+-- Dipakai INDEX untuk tag "ON BASE" — tanpa RemoteFunction baru.
+local ownedDefIds = {}
+local function rebuildIndex()
+	for _, child in ipairs(indexGrid:GetChildren()) do
+		if child:IsA("Frame") then
+			child:Destroy()
+		end
+	end
+	local ownedCount = 0
+	for _, def in ipairs(BrainrotDefs.List) do
+		local owned = ownedDefIds[def.Id] == true
+		if owned then
+			ownedCount += 1
+		end
+		local card = Instance.new("Frame")
+		card.Size = UDim2.new(0, 104, 0, 140)
+		card.BackgroundColor3 = owned and Color3.fromRGB(40, 90, 50) or Color3.fromRGB(50, 50, 70)
+		card.BorderSizePixel = 0
+		local cc = Instance.new("UICorner")
+		cc.CornerRadius = UDim.new(0, 8)
+		cc.Parent = card
+		local nameLabel = Instance.new("TextLabel")
+		nameLabel.Size = UDim2.new(1, -8, 0, 44)
+		nameLabel.Position = UDim2.new(0, 4, 0, 4)
+		nameLabel.BackgroundTransparency = 1
+		nameLabel.Text = def.Name
+		nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		nameLabel.TextSize = 13
+		nameLabel.TextWrapped = true
+		nameLabel.Font = Enum.Font.SourceSansBold
+		nameLabel.Parent = card
+		local rarityLabel = Instance.new("TextLabel")
+		rarityLabel.Size = UDim2.new(1, -8, 0, 20)
+		rarityLabel.Position = UDim2.new(0, 4, 0, 50)
+		rarityLabel.BackgroundTransparency = 1
+		rarityLabel.Text = def.Rarity
+		rarityLabel.TextColor3 = Config.Rarities[def.Rarity] or Color3.fromRGB(255, 255, 255)
+		rarityLabel.TextSize = 15
+		rarityLabel.Font = Enum.Font.SourceSansBold
+		rarityLabel.Parent = card
+		local incomeCard = Instance.new("TextLabel")
+		incomeCard.Size = UDim2.new(1, -8, 0, 20)
+		incomeCard.Position = UDim2.new(0, 4, 0, 72)
+		incomeCard.BackgroundTransparency = 1
+		incomeCard.Text = Config.formatMoney(def.Income) .. "/s"
+		incomeCard.TextColor3 = Color3.fromRGB(120, 255, 140)
+		incomeCard.TextSize = 15
+		incomeCard.Font = Enum.Font.SourceSansBold
+		incomeCard.Parent = card
+		local priceLabel = Instance.new("TextLabel")
+		priceLabel.Size = UDim2.new(1, -8, 0, 20)
+		priceLabel.Position = UDim2.new(0, 4, 0, 94)
+		priceLabel.BackgroundTransparency = 1
+		priceLabel.Text = "Harga " .. Config.formatMoney(def.Price)
+		priceLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+		priceLabel.TextSize = 14
+		priceLabel.Font = Enum.Font.SourceSansBold
+		priceLabel.Parent = card
+		if owned then
+			local tag = Instance.new("TextLabel")
+			tag.Size = UDim2.new(1, -8, 0, 18)
+			tag.Position = UDim2.new(0, 4, 0, 116)
+			tag.BackgroundColor3 = Color3.fromRGB(40, 160, 70)
+			tag.Text = "ON BASE"
+			tag.TextColor3 = Color3.fromRGB(255, 255, 255)
+			tag.TextSize = 13
+			tag.Font = Enum.Font.SourceSansBold
+			local tc = Instance.new("UICorner")
+			tc.CornerRadius = UDim.new(0, 6)
+			tc.Parent = tag
+			tag.Parent = card
+		end
+		card.Parent = indexGrid
+	end
+	indexTitle.Text = "FUSION BAY INDEX — " .. ownedCount .. " / 10"
+end
+
 -- Toggle panel: hanya satu yang terbuka.
 local function toggleFrame(id)
 	for key, frame in pairs(frames) do
@@ -236,6 +379,8 @@ local function toggleFrame(id)
 			frame.Visible = not frame.Visible
 			if frame.Visible and key == "Rank" then
 				refreshRank()
+			elseif frame.Visible and key == "Index" then
+				rebuildIndex()
 			end
 		else
 			frame.Visible = false
@@ -247,6 +392,15 @@ for id, button in pairs(menuButtons) do
 		toggleFrame(id)
 	end)
 end
+
+-- Tombol I (v3.5): buka/tutup INDEX. UI ini sebelumnya tidak punya
+-- key binding sama sekali — hanya tombol mouse.
+ContextActionService:BindAction("ToggleIndex", function(_, state)
+	if state == Enum.UserInputState.Begin then
+		toggleFrame("Index")
+	end
+	return Enum.ContextActionResult.Sink
+end, false, Enum.KeyCode.I)
 
 -- ============ Toast notifikasi ============
 local toast = Instance.new("TextLabel")
@@ -277,13 +431,83 @@ notifyEvent.OnClientEvent:Connect(function(message)
 	end)
 end)
 
+-- ============ Mission bar (v3.5, ala rank 1) ============
+-- Bar navy di bawah tengah layar, selalu terlihat. Misi berurutan
+-- 1 -> 2 -> 3; hadiah TIDAK diberikan client — client hanya meminta
+-- klaim ke server (MissionEvent), server memvalidasi dari datanya
+-- sendiri (Bought / Fused / SurvivedWave) sebelum memberi coin.
+local missionDefs = {
+	{ Text = "MISSION: Beli brainrot di conveyor (0/1) +$100", Reward = 100 },
+	{ Text = "MISSION: Fusion 1 brainrot (0/1) +$250", Reward = 250 },
+	{ Text = "MISSION: Selamat dari 1 tsunami (0/1) +$150", Reward = 150 },
+}
+local missionIndex = 1 -- 1..3 aktif, 4 = semua selesai
+local missionBar = Instance.new("TextLabel")
+missionBar.Size = UDim2.new(0, 640, 0, 36)
+missionBar.Position = UDim2.new(0.5, 0, 1, -44)
+missionBar.AnchorPoint = Vector2.new(0.5, 0)
+missionBar.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+missionBar.BackgroundTransparency = 0.1
+missionBar.TextColor3 = Color3.fromRGB(255, 255, 255)
+missionBar.TextSize = 18
+missionBar.Font = Enum.Font.SourceSansBold
+missionBar.TextXAlignment = Enum.TextXAlignment.Center
+local missionCorner = Instance.new("UICorner")
+missionCorner.CornerRadius = UDim.new(0, 10)
+missionCorner.Parent = missionBar
+missionBar.Parent = gui
+
+local function updateMissionBar()
+	if missionIndex > #missionDefs then
+		missionBar.Text = "MISSION: Semua misi selesai!"
+		missionBar.BackgroundColor3 = Color3.fromRGB(40, 140, 70)
+	else
+		missionBar.Text = missionDefs[missionIndex].Text
+		missionBar.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+	end
+end
+updateMissionBar()
+
+local missionToken = 0
+local function completeMission(id)
+	if id ~= missionIndex or id > #missionDefs then
+		return
+	end
+	missionToken += 1
+	local myToken = missionToken
+	missionEvent:FireServer(id)
+	missionBar.Text = "SELESAI! +" .. Config.formatMoney(missionDefs[id].Reward) .. " coin"
+	missionBar.BackgroundColor3 = Color3.fromRGB(40, 160, 70)
+	task.delay(3, function()
+		if myToken ~= missionToken then
+			return
+		end
+		missionIndex = id + 1
+		updateMissionBar()
+	end)
+end
+
+-- Deteksi penyelesaian dari notifikasi PRIBADI server (bukan notifyAll
+-- pemain lain): "Dibeli: ..." = beli sendiri, "FUSION! ..." = fusion
+-- sendiri, "Kamu selamat dari tsunami! ..." = selamat wave sendiri.
+notifyEvent.OnClientEvent:Connect(function(message)
+	local msg = tostring(message)
+	if missionIndex == 1 and string.sub(msg, 1, 8) == "Dibeli: " then
+		completeMission(1)
+	elseif missionIndex == 2 and string.sub(msg, 1, 8) == "FUSION! " then
+		completeMission(2)
+	elseif missionIndex == 3 and string.sub(msg, 1, 25) == "Kamu selamat dari tsunami" then
+		completeMission(3)
+	end
+end)
+
 -- ============ Banner wave (v3.4: kecil, 60% lebar, 48px, transparan,
 -- dan HILANG sendiri setelah warning berakhir — tidak menutupi layar
--- selama tsunami berjalan). Dipindah ke y=56 supaya tidak menumpuk
--- dengan bar objektif di kiri atas.
+-- selama tsunami berjalan. v3.5: dipindah ke y=108, di bawah pil uang
+-- tengah atas, supaya ketiganya tidak menumpuk.)
 local waveBanner = Instance.new("TextLabel")
 waveBanner.Size = UDim2.new(0.6, 0, 0, 48)
-waveBanner.Position = UDim2.new(0.5, 0, 0, 56)
+waveBanner.Position = UDim2.new(0.5, 0, 0, 108)
 waveBanner.AnchorPoint = Vector2.new(0.5, 0)
 waveBanner.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
 waveBanner.BackgroundTransparency = 0.3
@@ -400,13 +624,20 @@ end
 
 local lastOwned = {}
 updateUIEvent.OnClientEvent:Connect(function(data)
-	coinsLabel.Text = "Coin: " .. Config.formatMoney(data.Coins)
-	incomeLabel.Text = "Income: " .. Config.formatMoney(data.IncomePerSec) .. "/s"
-	rebirthLabel.Text = "Rebirth: " .. tostring(data.Rebirths) .. " (x" .. tostring(data.RebirthMult) .. ")"
+	coinsLabel.Text = Config.formatMoney(data.Coins)
+	incomeLabel.Text = "+" .. Config.formatMoney(data.IncomePerSec) .. "/s"
+	multLabel.Text = "x" .. tostring(data.RebirthMult)
+	rebirthLabel.Text = "REBIRTH " .. tostring(data.Rebirths)
 	if data.WaveIn and data.WaveIn > 0 then
 		waveLabel.Text = "Wave: " .. tostring(data.WaveIn) .. "s"
 	else
 		waveLabel.Text = "Wave: TSUNAMI!"
+	end
+	-- v3.5: sinkron misi dari server (mis. setelah rejoin, misi yang
+	-- sudah diklaim tidak diulang lagi) dan daftar owned untuk INDEX.
+	if data.MissionIndex and data.MissionIndex > missionIndex then
+		missionIndex = data.MissionIndex
+		updateMissionBar()
 	end
 	-- Panel rebirth.
 	if data.NextRebirth then
@@ -420,6 +651,13 @@ updateUIEvent.OnClientEvent:Connect(function(data)
 	end
 	-- Daftar owned untuk fusion (rebuild hanya jika berubah).
 	if data.Owned then
+		ownedDefIds = {}
+		for _, o in ipairs(data.Owned) do
+			ownedDefIds[o.DefId] = true
+		end
+		if indexFrame.Visible then
+			rebuildIndex()
+		end
 		local changed = #data.Owned ~= #lastOwned
 		if not changed then
 			for i, o in ipairs(data.Owned) do

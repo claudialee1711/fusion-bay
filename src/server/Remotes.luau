@@ -56,6 +56,7 @@ Remotes.NotifyEvent = getEvent("NotifyEvent")
 Remotes.WaveEvent = getEvent("WaveEvent")
 Remotes.GetPlayerData = getFunction("GetPlayerData")
 Remotes.GetLeaderboard = getFunction("GetLeaderboard")
+Remotes.MissionEvent = getEvent("MissionEvent")
 
 function Remotes.notify(player, message)
 	Remotes.NotifyEvent:FireClient(player, message)

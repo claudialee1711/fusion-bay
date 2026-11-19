@@ -87,6 +87,11 @@ Config.WaveSweepSeconds = 8
 Config.WaveCoinLoss = 0.10 -- 10% coin hilang kalau kena ombak di luar base
 Config.WaveSurvivorReward = 50 -- coin untuk yang selamat di base sendiri
 
+-- Misi (v3.5): hadiah hanya diklaim server setelah validasi
+-- (beli / fusion / selamat tsunami) — client tidak bisa memberi
+-- coin ke dirinya sendiri. Urutan misi 1 -> 2 -> 3.
+Config.MissionRewards = { 100, 250, 150 }
+
 -- Shop
 Config.ShopItems = {
 	{ Id = "boots", Name = "Speed Boots", Price = 1500, Desc = "+4 WalkSpeed permanen" },

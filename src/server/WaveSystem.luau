@@ -94,6 +94,7 @@ function WaveSystem.start()
 					if data then
 						data.Coins += Config.WaveSurvivorReward
 						data.TotalEarned += Config.WaveSurvivorReward
+						data.SurvivedWave = true -- v3.5: bukti selamat untuk misi 3
 						Remotes.notify(player, "Kamu selamat dari tsunami! +" .. Config.WaveSurvivorReward .. " coin.")
 					end
 				end

@@ -49,6 +49,8 @@ function EconomySystem.pushUI(player)
 		BaseLocked = base and State.isLocked(base) or false,
 		WaveIn = State.WaveIn,
 		HasBoots = data.Items.boots,
+		-- v3.5: misi berikutnya yang boleh diklaim (1..4; 4 = semua selesai).
+		MissionIndex = #(data.MissionsClaimed or {}) + 1,
 	})
 end
 
@@ -96,6 +98,7 @@ function EconomySystem.buyBrainrot(player, rec)
 	end
 
 	data.Coins -= rec.Price
+	data.Bought = (data.Bought or 0) + 1 -- v3.5: bukti beli untuk misi 1
 	DataSystem.addOwned(player, rec.Def.Id, rec.Mutation.Name, false)
 	rec.State = "owned"
 	rec.Owner = player
@@ -355,6 +358,46 @@ function EconomySystem.rebirth(player)
 	EconomySystem.pushUI(player)
 end
 
+-- MISI (v3.5): client hanya MEMINTA klaim; server memvalidasi dari
+-- data miliknya sendiri sebelum memberi coin. Misi harus diklaim
+-- berurutan 1 -> 2 -> 3, sekali saja per pemain.
+function EconomySystem.claimMission(player, missionId)
+	if typeof(missionId) ~= "number" then
+		return
+	end
+	local data = DataSystem.get(player)
+	if not data then
+		return
+	end
+	data.MissionsClaimed = data.MissionsClaimed or {}
+	local nextId = #data.MissionsClaimed + 1
+	if missionId ~= nextId or missionId < 1 or missionId > 3 then
+		return -- bukan gilirannya, atau sudah diklaim / tidak ada
+	end
+	local ok = false
+	if missionId == 1 then
+		ok = (data.Bought or 0) > 0 -- benar-benar membeli di conveyor
+	elseif missionId == 2 then
+		for _, owned in ipairs(data.Owned) do
+			if owned.Fused then
+				ok = true
+				break
+			end
+		end
+	elseif missionId == 3 then
+		ok = data.SurvivedWave == true
+	end
+	if not ok then
+		return -- syarat belum terpenuhi di server: tidak ada coin
+	end
+	local reward = Config.MissionRewards[missionId]
+	table.insert(data.MissionsClaimed, missionId)
+	data.Coins += reward
+	data.TotalEarned += reward
+	Remotes.notify(player, "MISI SELESAI! +" .. Config.formatMoney(reward) .. " coin.")
+	EconomySystem.pushUI(player)
+end
+
 -- Income tick tiap detik + hubungkan Remote + refresh cincin kunci base.
 function EconomySystem.start()
 	Remotes.BuyItemEvent.OnServerEvent:Connect(function(player, itemId)
@@ -371,6 +414,9 @@ function EconomySystem.start()
 			return
 		end
 		EconomySystem.fuseBrainrots(player, id1, id2)
+	end)
+	Remotes.MissionEvent.OnServerEvent:Connect(function(player, missionId)
+		EconomySystem.claimMission(player, missionId)
 	end)
 	Remotes.GetPlayerData.OnServerInvoke = function(player)
 		local data = DataSystem.get(player)

@@ -215,6 +215,26 @@ function BrainrotFactory.build(def, mutation, position, fused)
 	text.Parent = gui
 	gui.Parent = body
 
+	-- v3.5 (ala rank 1): angka "+$X/s" hijau melayang DI ATAS label
+	-- nama (offset 3.6*s vs label 2.8*s) supaya tidak menumpuk.
+	local floatGui = Instance.new("BillboardGui")
+	floatGui.Name = "IncomeFloat"
+	floatGui.Size = UDim2.fromOffset(100, 24)
+	floatGui.StudsOffset = Vector3.new(0, 3.6 * s, 0)
+	floatGui.AlwaysOnTop = false
+	floatGui.MaxDistance = 50
+	local floatText = Instance.new("TextLabel")
+	floatText.Name = "Text"
+	floatText.Size = UDim2.fromScale(1, 1)
+	floatText.BackgroundTransparency = 1
+	floatText.TextColor3 = Color3.fromRGB(120, 255, 140)
+	floatText.TextStrokeTransparency = 0.2
+	floatText.TextScaled = true
+	floatText.Font = Enum.Font.SourceSansBold
+	floatText.Text = "+$" .. tostring(def.Income * mutation.Mult) .. "/s"
+	floatText.Parent = floatGui
+	floatGui.Parent = body
+
 	local click = Instance.new("ClickDetector")
 	click.Name = "BuyClick"
 	click.MaxActivationDistance = 32
@@ -260,6 +280,12 @@ function BrainrotFactory.setLabel(model, def, mutation, priceOrNil, fused)
 	end
 	text.Text = line
 	text.TextColor3 = mutation.Color
+	-- v3.5: angka melayang ikut pengali mutation yang sama.
+	local floatGui = body:FindFirstChild("IncomeFloat")
+	local floatText = floatGui and floatGui:FindFirstChild("Text")
+	if floatText then
+		floatText.Text = "+$" .. tostring(income) .. "/s"
+	end
 end
 
 return BrainrotFactory
