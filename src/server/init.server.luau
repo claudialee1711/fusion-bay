@@ -1,4 +1,4 @@
--- Fusion Bay v3.0 (recorded rebuild) — server utama.
+-- Fusion Bay v3.1 (recorded rebuild) — server utama.
 -- Bangun map, muat sistem, urus pemain masuk/keluar.
 --
 -- PENTING (pelajaran playtest v2): script ini ADALAH Script "Server"
@@ -122,6 +122,25 @@ local function updateRebirthTitle(player, data)
 	gui.Parent = head
 end
 
+-- v3.1: PAKSA karakter menghadap UTARA (-Z, ke conveyor/base).
+-- SpawnLocation Orientation Y=0 saja TIDAK cukup: di playtest v2.2,
+-- v2.3 DAN v3.0 karakter tetap spawn menghadap SELATAN (+Z, ke tepi
+-- map kosong) dan kamera ikut menghadap selatan, jadi conveyor, sign,
+-- dan base (semuanya di utara) tidak terlihat. Karena itu arah hadap
+-- dipaksa di sini lewat HumanoidRootPart.CFrame — bukan lewat
+-- SpawnLocation. Dipanggil sekali saat spawn DAN sekali lagi setelah
+-- 0.5 detik, karena Roblox kadang mengorientasi ulang karakter sesaat
+-- setelah spawn. SpawnLocation tetap Y=0 (jangan dibalik ke 180).
+local function faceNorth(character)
+	local hrp = character:WaitForChild("HumanoidRootPart", 10)
+	if not hrp then
+		return
+	end
+	local pos = hrp.Position
+	hrp.CFrame = CFrame.new(pos, pos + Vector3.new(0, 0, -1))
+	print("[FusionBay] SPAWN menghadap utara")
+end
+
 local function onPlayerAdded(player)
 	local data = DataSystem.load(player)
 	LeaderboardSystem.setupPlayer(player)
@@ -138,6 +157,10 @@ local function onPlayerAdded(player)
 	StealSystem.giveSlapTool(player)
 	-- Terapkan Speed Boots saat karakter spawn + judul rebirth.
 	player.CharacterAdded:Connect(function(character)
+		faceNorth(character)
+		task.delay(0.5, function()
+			faceNorth(character)
+		end)
 		task.wait(0.5)
 		local hum = character:FindFirstChildOfClass("Humanoid")
 		if hum and data.Items.boots then
@@ -147,6 +170,11 @@ local function onPlayerAdded(player)
 		-- Beri lagi Slap tool kalau hilang saat respawn.
 		StealSystem.giveSlapTool(player)
 	end)
+	-- Kalau karakter sudah ada saat onPlayerAdded jalan (rejoin cepat),
+	-- CharacterAdded tidak akan fire lagi — paksa hadap utara langsung.
+	if player.Character then
+		task.spawn(faceNorth, player.Character)
+	end
 	task.wait(1)
 	EconomySystem.pushUI(player)
 	Remotes.notify(player, "Selamat datang di Fusion Bay! Klik brainrot di conveyor untuk membeli. Gabungkan 2 brainrot sama di Fusion Altar!")
@@ -196,5 +224,5 @@ for _, rec in ipairs(State.Active) do
 		walking += 1
 	end
 end
-print("[FusionBay] BUILD v3.0 recorded rebuild: conveyor z=30, model 2.0x, grounding 1.6x (kaki menapak), sign kecil di spawn, brainrot di conveyor=" .. walking)
+print("[FusionBay] BUILD v3.1 recorded rebuild: spawn dipaksa menghadap utara (server+camera), conveyor z=30, model 2.0x, grounding 1.6x (kaki menapak), sign kecil di spawn, brainrot di conveyor=" .. walking)
 print("Fusion Bay server started.")
