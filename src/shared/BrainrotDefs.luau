@@ -57,7 +57,9 @@ BrainrotDefs.List = {
 		Rarity = "Epic",
 		Income = 45,
 		Price = 2500,
-		Body = Color3.fromRGB(90, 140, 255),
+		-- v3.4: badan dulu (90,140,255) nyaris sama dengan base biru
+		-- (90,160,255) — digelapkan jadi biru navy supaya terbaca.
+		Body = Color3.fromRGB(30, 70, 190),
 		Head = Color3.fromRGB(140, 180, 255),
 		Accessory = "sharkfin",
 	},
@@ -90,8 +92,10 @@ BrainrotDefs.List = {
 		Rarity = "Legendary",
 		Income = 160,
 		Price = 12000,
-		Body = Color3.fromRGB(60, 140, 70),
-		Head = Color3.fromRGB(90, 180, 100),
+		-- v3.4: badan dulu hijau (60,140,70) — hilang di rumput hijau
+		-- (80,220,90). Diganti teal gelap supaya kontras dengan rumput.
+		Body = Color3.fromRGB(30, 140, 150),
+		Head = Color3.fromRGB(60, 180, 180),
 		Accessory = "plane",
 	},
 	{

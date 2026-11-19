@@ -138,13 +138,15 @@ function MapBuilder.build()
 			end
 		end
 
-		-- Label nama pemilik base (160x36, tidak AlwaysOnTop supaya
-		-- label base sebelah tidak menumpuk di layar).
+		-- Label nama pemilik base (v3.4: 120x28, MaxDistance 40,
+		-- StudsOffset 2.5 — duduk tepat di atas platformnya sendiri,
+		-- bukan melayang tinggi menumpuk dengan label base sebelah).
 		local labelGui = Instance.new("BillboardGui")
 		labelGui.Name = "BaseLabel"
-		labelGui.Size = UDim2.fromOffset(160, 36)
-		labelGui.StudsOffset = Vector3.new(0, 6, 0)
+		labelGui.Size = UDim2.fromOffset(120, 28)
+		labelGui.StudsOffset = Vector3.new(0, 2.5, 0)
 		labelGui.AlwaysOnTop = false
+		labelGui.MaxDistance = 40
 		local label = Instance.new("TextLabel")
 		label.Size = UDim2.fromScale(1, 1)
 		label.BackgroundTransparency = 1
@@ -165,16 +167,20 @@ function MapBuilder.build()
 		-- FUSION ALTAR (twist juara): pad Neon emas di tengah belakang
 		-- base, tempat brainrot hasil fusion muncul. AltarPos adalah
 		-- titik TANAH (y=2.3); pemanggil memakai bodyCenter().
+		-- v3.4: pad RATA — (8, 0.3, 8), pusat y=2.15 (atas y=2.3,
+		-- tepat di atas platform atas y=2.0). Dulu (0.4, 8, 8) yang
+		-- diputar 90 derajat: dari kamera rendah terlihat seperti
+		-- balok kuning raksasa menutupi pandangan. Tanpa rotasi.
 		local altarPos = Vector3.new(pos.X, 2.3, pos.Z + (pos.Z < 0 and -9 or 9))
-		local altar = newPart(ws, "FusionAltar" .. i, Vector3.new(0.4, 8, 8),
-			altarPos, Color3.fromRGB(255, 215, 0),
+		local altar = newPart(ws, "FusionAltar" .. i, Vector3.new(8, 0.3, 8),
+			Vector3.new(pos.X, 2.15, pos.Z + (pos.Z < 0 and -9 or 9)), Color3.fromRGB(255, 215, 0),
 			{ Transparency = 0.1, CanCollide = false, Material = Enum.Material.Neon })
-		altar.Orientation = Vector3.new(0, 0, 90)
 		local altarGui = Instance.new("BillboardGui")
 		altarGui.Name = "FusionLabel"
-		altarGui.Size = UDim2.fromOffset(160, 36)
-		altarGui.StudsOffset = Vector3.new(0, 3.5, 0)
+		altarGui.Size = UDim2.fromOffset(120, 28)
+		altarGui.StudsOffset = Vector3.new(0, 1.5, 0)
 		altarGui.AlwaysOnTop = false
+		altarGui.MaxDistance = 40
 		local altarText = Instance.new("TextLabel")
 		altarText.Size = UDim2.fromScale(1, 1)
 		altarText.BackgroundTransparency = 0.3
@@ -286,7 +292,7 @@ function MapBuilder.build()
 	signText.Parent = signGui
 	signGui.Parent = sign
 
-	print("[FusionBay] MAP v3.3: conveyor z=30, 8 base, papan kecil di spawn (0,5,60), tanah hijau atas y=1")
+	print("[FusionBay] MAP v3.4: conveyor z=30, 8 base, papan kecil di spawn (0,5,60), tanah hijau atas y=1")
 	return State.Bases
 end
 

@@ -49,17 +49,19 @@ do
 end
 
 -- v3.3: BRAINROT TES tepat di depan spawn — 10 stud di utara spawn
--- (0, 2.3, 65), di atas tanah plaza (atas y=1.0). Kalau model ini
--- tidak terlihat di frame pertama, masalahnya bukan map-nya, tapi
--- model brainrot-nya sendiri. Bukan milik pemain, tidak bisa dibeli.
+-- (0, 1.0, 65), MENAPAK di atas rumput (atas y=1.0). v3.4: dulu
+-- ground-nya 2.3, jadi kaki melayang 1.3 stud di atas rumput.
+-- Kalau model ini tidak terlihat di frame pertama, masalahnya bukan
+-- map-nya, tapi model brainrot-nya sendiri. Bukan milik pemain,
+-- tidak bisa dibeli.
 do
 	local testDef = BrainrotDefs.ById["pisang-kucing"] or BrainrotDefs.List[1]
 	local testMutation = Config.Mutations[1] -- Normal
-	local testModel = BrainrotFactory.build(testDef, testMutation, BrainrotFactory.bodyCenter(Vector3.new(0, 2.3, 65), testDef), false)
+	local testModel = BrainrotFactory.build(testDef, testMutation, BrainrotFactory.bodyCenter(Vector3.new(0, 1.0, 65), testDef), false)
 	testModel.Name = "TestBrainrotDepanSpawn"
 	testModel.Parent = game:GetService("Workspace")
 	BrainrotFactory.setLabel(testModel, testDef, testMutation, nil, false)
-	print("[FusionBay] TEST brainrot di depan spawn: " .. testDef.Name .. " di (0, 2.3, 65)")
+	print("[FusionBay] TEST brainrot di depan spawn: " .. testDef.Name .. " di (0, 1.0, 65)")
 end
 
 -- Bangun kembali model brainrot milik pemain dari data simpanan
@@ -257,5 +259,5 @@ for _, rec in ipairs(State.Active) do
 		walking += 1
 	end
 end
-print("[FusionBay] BUILD v3.3 recorded rebuild: tanpa baseplate, tanah hijau atas y=1, conveyor terang, brainrot tes di depan spawn, spawn dipaksa menghadap utara (server+camera), conveyor z=30, model 2.0x, grounding 1.6x (kaki menapak), sign kecil di spawn, brainrot di conveyor=" .. walking)
+print("[FusionBay] BUILD v3.4 recorded rebuild: label rapi, altar rata, banner kecil, objektif di HUD, brainrot tes menapak, tanpa baseplate, tanah hijau atas y=1, spawn dipaksa menghadap utara (server+camera), conveyor z=30, model 2.0x, grounding 1.6x (kaki menapak), sign kecil di spawn, brainrot di conveyor=" .. walking)
 print("Fusion Bay server started.")

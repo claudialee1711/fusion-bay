@@ -93,6 +93,25 @@ local incomeLabel = makeLabel(hud, "Income: 0/s", UDim2.new(1, -20, 0, 28), UDim
 local rebirthLabel = makeLabel(hud, "Rebirth: 0 (x1)", UDim2.new(1, -20, 0, 28), UDim2.new(0, 10, 0, 74))
 local waveLabel = makeLabel(hud, "Wave: --", UDim2.new(1, -20, 0, 28), UDim2.new(0, 10, 0, 100), Color3.fromRGB(120, 200, 255))
 
+-- ============ Objektif permanen (v3.4, kiri atas, selalu terlihat) ============
+-- Alur game dalam satu baris — pemain baru langsung tahu yang harus
+-- dilakukan tanpa membuka panel BANTUAN. Di bawah bar ini tidak ada
+-- apa-apa lagi: banner wave dipindah ke y=56 supaya tidak menumpuk.
+local objective = Instance.new("TextLabel")
+objective.Size = UDim2.new(0, 940, 0, 30)
+objective.Position = UDim2.new(0, 12, 0, 12)
+objective.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+objective.BackgroundTransparency = 0.3
+objective.Text = "1. Beli brainrot di conveyor  2. Kumpulkan $/detik  3. Fusion 2 sama -> naik rarity  4. Lari ke base saat tsunami"
+objective.TextColor3 = Color3.fromRGB(255, 255, 255)
+objective.TextSize = 16
+objective.Font = Enum.Font.SourceSansBold
+objective.TextXAlignment = Enum.TextXAlignment.Left
+local objectiveCorner = Instance.new("UICorner")
+objectiveCorner.CornerRadius = UDim.new(0, 8)
+objectiveCorner.Parent = objective
+objective.Parent = gui
+
 -- ============ Tombol menu (kanan, di bawah HUD) ============
 local menuButtons = {}
 local menuDefs = {
@@ -258,15 +277,18 @@ notifyEvent.OnClientEvent:Connect(function(message)
 	end)
 end)
 
--- ============ Banner wave ============
+-- ============ Banner wave (v3.4: kecil, 60% lebar, 48px, transparan,
+-- dan HILANG sendiri setelah warning berakhir — tidak menutupi layar
+-- selama tsunami berjalan). Dipindah ke y=56 supaya tidak menumpuk
+-- dengan bar objektif di kiri atas.
 local waveBanner = Instance.new("TextLabel")
-waveBanner.Size = UDim2.new(0, 640, 0, 64)
-waveBanner.Position = UDim2.new(0.5, -320, 0, 24)
+waveBanner.Size = UDim2.new(0.6, 0, 0, 48)
+waveBanner.Position = UDim2.new(0.5, 0, 0, 56)
 waveBanner.AnchorPoint = Vector2.new(0.5, 0)
 waveBanner.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-waveBanner.BackgroundTransparency = 0.15
+waveBanner.BackgroundTransparency = 0.3
 waveBanner.TextColor3 = Color3.fromRGB(255, 255, 255)
-waveBanner.TextSize = 30
+waveBanner.TextSize = 22
 waveBanner.Font = Enum.Font.SourceSansBold
 waveBanner.Visible = false
 local bannerCorner = Instance.new("UICorner")
@@ -286,6 +308,14 @@ waveEvent.OnClientEvent:Connect(function(kind, seconds)
 		waveBanner.Text = "TSUNAMI! SEMBUNYI DI BASE!"
 		waveBanner.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
 		waveBanner.Visible = true
+		-- v3.4: peringatan 10 detik sudah berakhir — banner hilang
+		-- sendiri 3 detik setelah tsunami mulai, jangan menutupi
+		-- layar selama tsunami berjalan (status tetap ada di HUD).
+		task.delay(3, function()
+			if myToken == bannerToken then
+				waveBanner.Visible = false
+			end
+		end)
 	elseif kind == "end" then
 		waveBanner.Text = "Tsunami lewat!"
 		waveBanner.BackgroundColor3 = Color3.fromRGB(40, 140, 90)
