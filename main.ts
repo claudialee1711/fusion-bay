@@ -1,10 +1,16 @@
-// A working roblox-brainrot-01 entry (Node 22, standard library only): the game is this directory's Rojo
-// project, built into game.rbxl with `rojo build default.project.json --output game.rbxl`, and the program
-// hands it in. It copies game.rbxl, src/, screenshots/ and PLAY.json from beside this file to /output and
-// writes /output/dossier.json, the summary the judge reads, with the vendored make.fun library. A starting
-// point, not a winner: it is a grey square that moves with the arrow keys. Build your game, rebuild
-// game.rbxl, put your PNG or JPEG screenshots in screenshots/ (the first by name is the cover, and one of
-// them is the thumbnail you upload for your game on Roblox) and fill in PLAY.json with your published place.
+// Fusion Bay v3.0 — entry roblox-brainrot-01 (Node 22, standard library
+// only): the game is this directory's Rojo project, built into game.rbxl
+// with `rojo build default.project.json --output game.rbxl`, and the program
+// hands it in. It copies game.rbxl, src/, screenshots/ and PLAY.json from
+// beside this file to /output and writes /output/dossier.json, the summary
+// the judge reads, with the vendored make.fun library. Fusion Bay is a 3D
+// Steal-a-Brainrot game: buy brainrots off a conveyor, earn coins per
+// second in your base, fuse two same-rarity brainrots into one higher
+// rarity at the Fusion Altar, steal from other players, survive the
+// 90-second tsunami wave, and climb the rebirth ladder. Build your game,
+// rebuild game.rbxl, put your PNG or JPEG screenshots in screenshots/ (the
+// first by name is the cover, and one of them is the thumbnail you upload
+// for your game on Roblox) and fill in PLAY.json with your published place.
 //
 // Every name under /output starts with a letter, a digit or _ and holds only letters, digits, . _ and -: the
 // grader fails an entry whose output holds any other, so a file such as .gitkeep or .DS_Store copied in fails it.
