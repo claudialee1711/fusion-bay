@@ -14,7 +14,7 @@ local Spawner = {}
 local START_X = -90
 local END_X = 90
 local LANE_Z = 30
-local LANE_GROUND_Y = 0.6 -- atas conveyor; titik badan = 0.6 + 1.6*skala
+local LANE_GROUND_Y = 1.6 -- atas conveyor (v3.3: conveyor naik +1.0); titik badan = 1.6 + 1.6*skala
 
 function Spawner.clearConveyor()
 	for i = #State.Active, 1, -1 do

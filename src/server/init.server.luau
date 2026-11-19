@@ -29,6 +29,39 @@ _ = Remotes
 
 MapBuilder.build()
 
+-- v3.3: DIAGNOSTIK MAP — hitung part map yang benar-benar ada di
+-- Workspace dan baca tinggi atas Ground dari part-nya langsung, jadi
+-- Output sendiri membuktikan map ter-build (bukan cuma "kode lolos").
+do
+	local ws = game:GetService("Workspace")
+	local function countPrefix(prefix)
+		local n = 0
+		for _, child in ipairs(ws:GetChildren()) do
+			if string.sub(child.Name, 1, #prefix) == prefix then
+				n += 1
+			end
+		end
+		return n
+	end
+	local ground = ws:FindFirstChild("Ground")
+	local groundTop = ground and (ground.Position.Y + ground.Size.Y / 2) or -999
+	print("[FusionBay] MAP v3.3: Ground top y=" .. groundTop .. ", Conveyor=" .. countPrefix("Conveyor") .. " parts, BasePlatform=" .. countPrefix("BasePlatform") .. " parts")
+end
+
+-- v3.3: BRAINROT TES tepat di depan spawn — 10 stud di utara spawn
+-- (0, 2.3, 65), di atas tanah plaza (atas y=1.0). Kalau model ini
+-- tidak terlihat di frame pertama, masalahnya bukan map-nya, tapi
+-- model brainrot-nya sendiri. Bukan milik pemain, tidak bisa dibeli.
+do
+	local testDef = BrainrotDefs.ById["pisang-kucing"] or BrainrotDefs.List[1]
+	local testMutation = Config.Mutations[1] -- Normal
+	local testModel = BrainrotFactory.build(testDef, testMutation, BrainrotFactory.bodyCenter(Vector3.new(0, 2.3, 65), testDef), false)
+	testModel.Name = "TestBrainrotDepanSpawn"
+	testModel.Parent = game:GetService("Workspace")
+	BrainrotFactory.setLabel(testModel, testDef, testMutation, nil, false)
+	print("[FusionBay] TEST brainrot di depan spawn: " .. testDef.Name .. " di (0, 2.3, 65)")
+end
+
 -- Bangun kembali model brainrot milik pemain dari data simpanan
 -- (setelah load / rejoin). Model memakai bodyCenter() supaya menapak.
 local function spawnOwnedBrainrots(player, data)
@@ -224,5 +257,5 @@ for _, rec in ipairs(State.Active) do
 		walking += 1
 	end
 end
-print("[FusionBay] BUILD v3.2 recorded rebuild: tanpa PivotTo (model tidak tenggelam), tanah hijau di atas baseplate, spawn dipaksa menghadap utara (server+camera), conveyor z=30, model 2.0x, grounding 1.6x (kaki menapak), sign kecil di spawn, brainrot di conveyor=" .. walking)
+print("[FusionBay] BUILD v3.3 recorded rebuild: tanpa baseplate, tanah hijau atas y=1, conveyor terang, brainrot tes di depan spawn, spawn dipaksa menghadap utara (server+camera), conveyor z=30, model 2.0x, grounding 1.6x (kaki menapak), sign kecil di spawn, brainrot di conveyor=" .. walking)
 print("Fusion Bay server started.")

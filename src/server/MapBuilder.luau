@@ -8,8 +8,11 @@
 -- - Papan nama KECIL di dekat spawn (0,4,60), bukan papan raksasa di tengah.
 -- - WaveWall disembunyikan dengan Transparency = 1 — Part TIDAK punya
 --   properti Visible (itu milik GuiObject).
--- - Slot base dan AltarPos menyimpan titik TANAH (y=1.3); pemanggil
+-- - Slot base dan AltarPos menyimpan titik TANAH (y=2.3); pemanggil
 --   memakai BrainrotFactory.bodyCenter() untuk titik badan.
+-- v3.3: Baseplate di default.project.json DIHAPUS — Ground (atas y=1.0)
+--   adalah satu-satunya lantai. Semua yang menapak tanah naik +1.0
+--   dari v3.2 supaya tidak ada yang tenggelam relatif ke tanah baru.
 
 local State = require(script.Parent.State)
 
@@ -63,35 +66,43 @@ function MapBuilder.build()
 	sun.Parent = ws
 
 	-- Tanah pantai, laut di utara, pasir di tepi laut.
-	-- v3.2: Ground di y=-0.9 (atas y=0.1), BUKAN y=-1 (atas y=0) — atas
-	-- y=0 sebidang persis dengan Baseplate (atas y=0) dari
-	-- default.project.json, jadi rumput hijau kalah z-fighting dan
-	-- dunia kelihatan seperti baseplate cokelat kosong berbintik.
-	newPart(ws, "Ground", Vector3.new(220, 2, 220), Vector3.new(0, -0.9, 0),
-		Color3.fromRGB(120, 200, 110), { Material = Enum.Material.Grass })
+	-- v3.3: Ground Size (220,4,220) pusat y=-1 (atas y=1.0), hijau
+	-- terang — TIDAK sejajar lagi dengan apa pun. Baseplate sudah
+	-- dihapus dari default.project.json, jadi Ground adalah
+	-- satu-satunya lantai dan harus terlihat hijau dari spawn.
+	newPart(ws, "Ground", Vector3.new(220, 4, 220), Vector3.new(0, -1, 0),
+		Color3.fromRGB(80, 220, 90), { Material = Enum.Material.Grass })
 	newPart(ws, "Sea", Vector3.new(220, 1, 22), Vector3.new(0, 0.2, -99),
 		Color3.fromRGB(40, 140, 230), { Transparency = 0.25, Material = Enum.Material.Water, CanCollide = false })
-	newPart(ws, "Beach", Vector3.new(220, 1, 10), Vector3.new(0, 0.1, -84),
+	newPart(ws, "Beach", Vector3.new(220, 1, 10), Vector3.new(0, 0.6, -84),
 		Color3.fromRGB(240, 220, 160), { Material = Enum.Material.Sand })
 
 	-- Conveyor di z=30: 45 stud dari spawn (z=75), brainrot langsung
 	-- terlihat jelas dari spawn tanpa harus jalan jauh.
-	newPart(ws, "Conveyor", Vector3.new(190, 1, 14), Vector3.new(0, 0.1, 30),
-		Color3.fromRGB(60, 60, 70), { Material = Enum.Material.SmoothPlastic })
+	-- v3.3: conveyor naik +1.0 (pusat y=1.1, atas y=1.6), warna terang
+	-- supaya terbaca sebagai pita di seberang pandangan dari spawn.
+	newPart(ws, "Conveyor", Vector3.new(190, 1, 14), Vector3.new(0, 1.1, 30),
+		Color3.fromRGB(200, 200, 210), { Material = Enum.Material.SmoothPlastic })
 	for x = -90, 90, 15 do
-		local arrow = newPart(ws, "ConveyorArrow", Vector3.new(4, 0.2, 6), Vector3.new(x, 0.7, 30),
+		local arrow = newPart(ws, "ConveyorArrow", Vector3.new(4, 0.2, 6), Vector3.new(x, 1.7, 30),
 			Color3.fromRGB(255, 200, 60), { CanCollide = false })
 		arrow.Orientation = Vector3.new(0, 90, 0)
 	end
-	newPart(ws, "RailNorth", Vector3.new(190, 2, 1), Vector3.new(0, 1, 22.5), Color3.fromRGB(40, 40, 50))
-	newPart(ws, "RailSouth", Vector3.new(190, 2, 1), Vector3.new(0, 1, 37.5), Color3.fromRGB(40, 40, 50))
+	newPart(ws, "RailNorth", Vector3.new(190, 2, 1), Vector3.new(0, 2, 22.5), Color3.fromRGB(40, 40, 50))
+	newPart(ws, "RailSouth", Vector3.new(190, 2, 1), Vector3.new(0, 2, 37.5), Color3.fromRGB(40, 40, 50))
+	-- v3.3: strip Neon kuning di atas rel — conveyor harus terbaca
+	-- sebagai pita terang di seluruh lebar pandangan dari spawn.
+	newPart(ws, "ConveyorEdgeNorth", Vector3.new(190, 0.3, 0.6), Vector3.new(0, 3.15, 22.5),
+		Color3.fromRGB(255, 215, 0), { CanCollide = false, Material = Enum.Material.Neon })
+	newPart(ws, "ConveyorEdgeSouth", Vector3.new(190, 0.3, 0.6), Vector3.new(0, 3.15, 37.5),
+		Color3.fromRGB(255, 215, 0), { CanCollide = false, Material = Enum.Material.Neon })
 
 	-- Spawn: menghadap UTARA (-Z, ke conveyor dan base).
 	-- Orientation Y=0 = utara. Y=180 = selatan, membelakangi game.
 	local spawn = Instance.new("SpawnLocation")
 	spawn.Name = "SpawnLocation"
 	spawn.Size = Vector3.new(16, 1, 12)
-	spawn.Position = Vector3.new(0, 0.5, 75)
+	spawn.Position = Vector3.new(0, 1.5, 75)
 	spawn.Orientation = Vector3.new(0, 0, 0)
 	spawn.Color = Color3.fromRGB(255, 220, 90)
 	spawn.Anchored = true
@@ -103,17 +114,17 @@ function MapBuilder.build()
 	for i, pos in ipairs(positions) do
 		local center = Vector3.new(pos.X, 0, pos.Z)
 		local platform = newPart(ws, "BasePlatform" .. i, Vector3.new(30, 1, 24),
-			Vector3.new(pos.X, 0.5, pos.Z), colors[i], { Material = Enum.Material.SmoothPlastic })
+			Vector3.new(pos.X, 1.5, pos.Z), colors[i], { Material = Enum.Material.SmoothPlastic })
 		-- Dinding belakang base (penanda visual).
 		newPart(ws, "BaseWall" .. i, Vector3.new(30, 6, 1),
-			Vector3.new(pos.X, 3, pos.Z + (pos.Z < 0 and -12 or 12)), colors[i], { Transparency = 0.5 })
+			Vector3.new(pos.X, 4, pos.Z + (pos.Z < 0 and -12 or 12)), colors[i], { Transparency = 0.5 })
 		-- Zona base (tidak terlihat, untuk deteksi steal/deliver/wave).
 		local zone = newPart(ws, "BaseZone" .. i, Vector3.new(30, 8, 24),
-			Vector3.new(pos.X, 4, pos.Z), colors[i],
+			Vector3.new(pos.X, 5, pos.Z), colors[i],
 			{ Transparency = 1, CanCollide = false })
 
 	-- 6 slot brainrot: 3 kolom x 2 baris. Slot menyimpan titik TANAH
-		-- (y=1.3 = atas pad slot); pemanggil memakai bodyCenter()
+		-- (y=2.3 = atas pad slot); pemanggil memakai bodyCenter()
 		-- (ground + 1.6*s) untuk mengubahnya jadi titik badan.
 		local slots = {}
 		for row = 1, 2 do
@@ -121,9 +132,9 @@ function MapBuilder.build()
 				local sx = pos.X - 10 + (col - 1) * 10
 				local sz = pos.Z - 6 + (row - 1) * 12
 				newPart(ws, "BaseSlotPad" .. i .. "_" .. #slots + 1, Vector3.new(6, 0.3, 6),
-					Vector3.new(sx, 1.1, sz), Color3.fromRGB(255, 255, 255),
+					Vector3.new(sx, 2.1, sz), Color3.fromRGB(255, 255, 255),
 					{ Transparency = 0.4, CanCollide = false })
-				table.insert(slots, Vector3.new(sx, 1.3, sz))
+				table.insert(slots, Vector3.new(sx, 2.3, sz))
 			end
 		end
 
@@ -147,14 +158,14 @@ function MapBuilder.build()
 
 		-- Cincin kunci: terlihat (Neon kuning) saat base dikunci.
 		local lockRing = newPart(ws, "BaseLockRing" .. i, Vector3.new(0.4, 32, 32),
-			Vector3.new(pos.X, 2, pos.Z), Color3.fromRGB(255, 215, 0),
+			Vector3.new(pos.X, 3, pos.Z), Color3.fromRGB(255, 215, 0),
 			{ Transparency = 1, CanCollide = false, Material = Enum.Material.Neon })
 		lockRing.Orientation = Vector3.new(0, 0, 90)
 
 		-- FUSION ALTAR (twist juara): pad Neon emas di tengah belakang
 		-- base, tempat brainrot hasil fusion muncul. AltarPos adalah
-		-- titik TANAH (y=1.3); pemanggil memakai bodyCenter().
-		local altarPos = Vector3.new(pos.X, 1.3, pos.Z + (pos.Z < 0 and -9 or 9))
+		-- titik TANAH (y=2.3); pemanggil memakai bodyCenter().
+		local altarPos = Vector3.new(pos.X, 2.3, pos.Z + (pos.Z < 0 and -9 or 9))
 		local altar = newPart(ws, "FusionAltar" .. i, Vector3.new(0.4, 8, 8),
 			altarPos, Color3.fromRGB(255, 215, 0),
 			{ Transparency = 0.1, CanCollide = false, Material = Enum.Material.Neon })
@@ -194,7 +205,7 @@ function MapBuilder.build()
 	-- Plaza spawn: lingkaran ubin warna-warni di sekitar SpawnLocation.
 	for ring = 1, 3 do
 		local plaza = newPart(ws, "SpawnPlaza" .. ring, Vector3.new(0.3, 22 - ring * 4, 22 - ring * 4),
-			Vector3.new(0, 0.4, 75), Color3.fromRGB(255, 200 + ring * 10, 90),
+			Vector3.new(0, 1.4, 75), Color3.fromRGB(255, 200 + ring * 10, 90),
 			{ Transparency = 0.2, CanCollide = false, Material = Enum.Material.SmoothPlastic })
 		plaza.Orientation = Vector3.new(0, 0, 90)
 	end
@@ -203,16 +214,16 @@ function MapBuilder.build()
 	local umbrellaSpots = { { -14, 62 }, { 14, 62 }, { -14, 88 }, { 14, 88 } }
 	for _, spot in ipairs(umbrellaSpots) do
 		newPart(ws, "UmbrellaPole", Vector3.new(0.5, 6, 0.5),
-			Vector3.new(spot[1], 3, spot[2]), Color3.fromRGB(200, 200, 200))
+			Vector3.new(spot[1], 4, spot[2]), Color3.fromRGB(200, 200, 200))
 		local top = newPart(ws, "UmbrellaTop", Vector3.new(0.3, 9, 9),
-			Vector3.new(spot[1], 6.2, spot[2]), Color3.fromRGB(255, 90, 120),
+			Vector3.new(spot[1], 7.2, spot[2]), Color3.fromRGB(255, 90, 120),
 			{ Material = Enum.Material.SmoothPlastic })
 		top.Orientation = Vector3.new(0, 0, 90)
 	end
 	for _, cx in ipairs({ -98, 98 }) do
-		newPart(ws, "Crate", Vector3.new(4, 4, 4), Vector3.new(cx, 2, 16),
+		newPart(ws, "Crate", Vector3.new(4, 4, 4), Vector3.new(cx, 3, 16),
 			Color3.fromRGB(170, 120, 60), { Material = Enum.Material.Wood })
-		newPart(ws, "Crate", Vector3.new(3, 3, 3), Vector3.new(cx, 1.5, 21),
+		newPart(ws, "Crate", Vector3.new(3, 3, 3), Vector3.new(cx, 2.5, 21),
 			Color3.fromRGB(150, 105, 55), { Material = Enum.Material.Wood })
 	end
 
@@ -236,12 +247,12 @@ function MapBuilder.build()
 	local palmSpots = { { -100, -70 }, { 100, -70 }, { -100, 70 }, { 100, 70 }, { -60, 80 }, { 60, -80 } }
 	for _, spot in ipairs(palmSpots) do
 		local trunk = newPart(ws, "PalmTrunk", Vector3.new(1.5, 10, 1.5),
-			Vector3.new(spot[1], 5, spot[2]), Color3.fromRGB(140, 95, 50),
+			Vector3.new(spot[1], 6, spot[2]), Color3.fromRGB(140, 95, 50),
 			{ Material = Enum.Material.Wood })
 		trunk.Orientation = Vector3.new(0, 0, 8)
 		for k = 1, 5 do
 			local leaf = newPart(ws, "PalmLeaf", Vector3.new(6, 0.5, 2),
-				Vector3.new(spot[1] + math.cos(k * 1.25) * 3, 10.5, spot[2] + math.sin(k * 1.25) * 3),
+				Vector3.new(spot[1] + math.cos(k * 1.25) * 3, 11.5, spot[2] + math.sin(k * 1.25) * 3),
 				Color3.fromRGB(40, 180, 80), { Material = Enum.Material.Grass })
 			leaf.Orientation = Vector3.new(0, k * 72, 20)
 		end
@@ -255,10 +266,10 @@ function MapBuilder.build()
 	wall.Transparency = 1
 	State.WaveWall = wall
 
-	-- Papan nama game KECIL di dekat spawn (0,4,60) — Part 10x3,
+	-- Papan nama game KECIL di dekat spawn (0,5,60) — Part 10x3,
 	-- BillboardGui 160x40, AlwaysOnTop=false. Terlihat saat masuk tapi
 	-- tidak ada apa pun yang menghalangi pandangan spawn -> conveyor.
-	local sign = newPart(ws, "GameSign", Vector3.new(10, 3, 1), Vector3.new(0, 4, 60),
+	local sign = newPart(ws, "GameSign", Vector3.new(10, 3, 1), Vector3.new(0, 5, 60),
 		Color3.fromRGB(255, 200, 60))
 	local signGui = Instance.new("BillboardGui")
 	signGui.Size = UDim2.fromOffset(160, 40)
@@ -275,7 +286,7 @@ function MapBuilder.build()
 	signText.Parent = signGui
 	signGui.Parent = sign
 
-	print("[FusionBay] MAP v2: conveyor z=30, 8 base, papan kecil di spawn (0,4,60)")
+	print("[FusionBay] MAP v3.3: conveyor z=30, 8 base, papan kecil di spawn (0,5,60), tanah hijau atas y=1")
 	return State.Bases
 end
 
