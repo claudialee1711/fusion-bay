@@ -63,7 +63,11 @@ function MapBuilder.build()
 	sun.Parent = ws
 
 	-- Tanah pantai, laut di utara, pasir di tepi laut.
-	newPart(ws, "Ground", Vector3.new(220, 2, 220), Vector3.new(0, -1, 0),
+	-- v3.2: Ground di y=-0.9 (atas y=0.1), BUKAN y=-1 (atas y=0) — atas
+	-- y=0 sebidang persis dengan Baseplate (atas y=0) dari
+	-- default.project.json, jadi rumput hijau kalah z-fighting dan
+	-- dunia kelihatan seperti baseplate cokelat kosong berbintik.
+	newPart(ws, "Ground", Vector3.new(220, 2, 220), Vector3.new(0, -0.9, 0),
 		Color3.fromRGB(120, 200, 110), { Material = Enum.Material.Grass })
 	newPart(ws, "Sea", Vector3.new(220, 1, 22), Vector3.new(0, 0.2, -99),
 		Color3.fromRGB(40, 140, 230), { Transparency = 0.25, Material = Enum.Material.Water, CanCollide = false })

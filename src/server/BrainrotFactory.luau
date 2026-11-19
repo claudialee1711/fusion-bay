@@ -90,6 +90,22 @@ function BrainrotFactory.bodyCenter(groundPos, def)
 	return groundPos + Vector3.new(0, 1.6 * s, 0)
 end
 
+-- Pindah model brainrot ke titik badan baru TANPA PivotTo (v3.2).
+-- PivotTo memakai pusat bounding-box model sebagai pivot, bukan Body:
+-- bbox membentang dari atas kepala ~+2.7*s sampai dasar cincin ~-1.6*s,
+-- jadi pusatnya ~+0.55*s di atas badan — setiap PivotTo menggeser
+-- seluruh model KE BAWAH ~0.55*s dan mengubur kaki + cincin, padahal
+-- bodyCenter() sudah benar. TranslateBy menggeser semua part dengan
+-- vektor yang sama dan tidak punya ambiguitas pivot, jadi ini satu-satunya
+-- cara memindah model brainrot. JANGAN pakai PivotTo / MoveTo /
+-- SetPrimaryPartCFrame untuk model brainrot di mana pun.
+function BrainrotFactory.moveTo(model, bodyCenterPos)
+	local pp = model and model.PrimaryPart
+	if pp then
+		model:TranslateBy(bodyCenterPos - pp.Position)
+	end
+end
+
 function BrainrotFactory.build(def, mutation, position, fused)
 	local s = BrainrotFactory.scaleFor(def)
 	local rarityColor = Config.Rarities[def.Rarity] or Color3.fromRGB(255, 255, 255)
@@ -205,7 +221,10 @@ function BrainrotFactory.build(def, mutation, position, fused)
 	click.Parent = body
 
 	model.PrimaryPart = body
-	model:PivotTo(CFrame.new(position))
+	-- v3.2: JANGAN PivotTo di sini. Semua part sudah diposisikan absolut
+	-- di atas; PivotTo memakai pusat bounding-box (~+0.55*s di atas
+	-- badan) sebagai pivot dan akan menggeser model ke bawah ~0.55*s,
+	-- mengubur kaki + cincin. Lihat BrainrotFactory.moveTo().
 	return model
 end
 

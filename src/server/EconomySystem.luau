@@ -103,7 +103,8 @@ function EconomySystem.buyBrainrot(player, rec)
 	rec.SlotIndex = slot
 	rec.Fused = false
 	local slotPos = base.Slots[slot]
-	rec.Model:PivotTo(CFrame.new(BrainrotFactory.bodyCenter(slotPos, rec.Def)))
+	-- v3.2: TranslateBy via moveTo, bukan PivotTo (mengubur model ~0.55*s).
+	BrainrotFactory.moveTo(rec.Model, BrainrotFactory.bodyCenter(slotPos, rec.Def))
 	BrainrotFactory.setLabel(rec.Model, rec.Def, rec.Mutation, nil, false)
 	-- Matikan ClickDetector supaya tidak bisa dibeli lagi.
 	local click = body:FindFirstChild("BuyClick")
@@ -265,7 +266,8 @@ function EconomySystem.fuseBrainrots(player, id1, id2)
 	State.NextBrainrotId += 1
 	task.delay(0.8, function()
 		if model.Parent then
-			model:PivotTo(CFrame.new(BrainrotFactory.bodyCenter(base.Slots[slot], resultDef)))
+			-- v3.2: TranslateBy via moveTo, bukan PivotTo.
+			BrainrotFactory.moveTo(model, BrainrotFactory.bodyCenter(base.Slots[slot], resultDef))
 		end
 	end)
 	Remotes.notify(player, "FUSION! " .. resultDef.Name .. " (" .. mutation.Name .. " " .. nextRarity .. ")!")

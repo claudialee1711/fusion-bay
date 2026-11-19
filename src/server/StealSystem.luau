@@ -89,7 +89,8 @@ function StealSystem.dropCarried(player, returnToOwner)
 	end
 	rec.State = "owned"
 	if base and rec.SlotIndex then
-		rec.Model:PivotTo(CFrame.new(BrainrotFactory.bodyCenter(base.Slots[rec.SlotIndex], rec.Def)))
+		-- v3.2: TranslateBy via moveTo, bukan PivotTo.
+		BrainrotFactory.moveTo(rec.Model, BrainrotFactory.bodyCenter(base.Slots[rec.SlotIndex], rec.Def))
 	end
 	if returnToOwner and rec.Owner then
 		Remotes.notify(rec.Owner, "Brainrotmu kembali ke base!")
@@ -196,7 +197,8 @@ local function tryDeliver(player)
 	State.Carrying[player] = nil
 	setCarryMarker(player, false)
 	restoreSpeed(player)
-	rec.Model:PivotTo(CFrame.new(BrainrotFactory.bodyCenter(myBase.Slots[slot], rec.Def)))
+	-- v3.2: TranslateBy via moveTo, bukan PivotTo.
+	BrainrotFactory.moveTo(rec.Model, BrainrotFactory.bodyCenter(myBase.Slots[slot], rec.Def))
 	BrainrotFactory.setLabel(rec.Model, rec.Def, rec.Mutation, nil, rec.Fused or false)
 	Remotes.notify(player, "Berhasil mencuri " .. rec.Def.Name .. "!")
 	if oldOwner then
@@ -251,7 +253,9 @@ function StealSystem.start()
 			if rec and rec.Model and rec.Model.Parent then
 				local root = Utils.getRoot(player)
 				if root then
-					rec.Model:PivotTo(CFrame.new(root.Position + Vector3.new(0, 5, 0)))
+					-- v3.2: TranslateBy via moveTo, bukan PivotTo.
+					-- Target = titik badan di atas kepala pembawa.
+					BrainrotFactory.moveTo(rec.Model, root.Position + Vector3.new(0, 5, 0))
 				end
 			end
 			tryPickup(player)
